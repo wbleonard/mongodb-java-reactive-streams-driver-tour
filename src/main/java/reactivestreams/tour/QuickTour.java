@@ -83,21 +83,25 @@ public class QuickTour {
         successSubscriber.await();
 
         // make a document and insert it
+        System.out.println("\n*** insertOne() using OperationSubscriber<> ***");
         Document doc = new Document("name", "MongoDB")
                 .append("type", "database")
                 .append("count", 1)
                 .append("info", new Document("x", 203).append("y", 102));
 
+        
         ObservableSubscriber<InsertOneResult> insertOneSubscriber = new OperationSubscriber<>();
         collection.insertOne(doc).subscribe(insertOneSubscriber);
         insertOneSubscriber.await();
 
         // get it (since it's the only one in there since we dropped the rest earlier on)
+        System.out.println("\n*** find() using PrintDocumentSubscriber<>  ***");
         ObservableSubscriber<Document> documentSubscriber = new PrintDocumentSubscriber();
         collection.find().first().subscribe(documentSubscriber);
         documentSubscriber.await();
 
         // now, lets add lots of little documents to the collection so we can explore queries and cursors
+        System.out.println("\n*** insertMany() using OperationSubscriber<>  ***");
         List<Document> documents = new ArrayList<>();
         for (int i = 0; i < 100; i++) {
             documents.add(new Document("i", i));
@@ -108,11 +112,13 @@ public class QuickTour {
         insertManySubscriber.await();
 
         // find first
+        System.out.println("\n*** find().first() using PrintDocumentSubscriber<>  ***");
         documentSubscriber = new PrintDocumentSubscriber();
         collection.find().first().subscribe(documentSubscriber);
         documentSubscriber.await();
 
         // lets get all the documents in the collection and print them out
+        System.out.println("\n*** find() using PrintDocumentSubscriber<>  ***");
         documentSubscriber = new PrintDocumentSubscriber();
         collection.find().subscribe(documentSubscriber);
         documentSubscriber.await();
@@ -120,31 +126,37 @@ public class QuickTour {
         // Query Filters
 
         // now use a query to get 1 document out
+        System.out.println("\n*** find(eq('i', 71)) using PrintDocumentSubscriber<>  ***");
         documentSubscriber = new PrintDocumentSubscriber();
         collection.find(eq("i", 71)).first().subscribe(documentSubscriber);
         documentSubscriber.await();
 
         // now use a range query to get a larger subset
+        System.out.println("\n*** find(gt('i', 50)) using PrintDocumentSubscriber<>  ***");
         documentSubscriber = new PrintDocumentSubscriber();
         collection.find(gt("i", 50)).subscribe(documentSubscriber);
-        successSubscriber.await();
+        documentSubscriber.await();
 
         // range query with multiple constraints
+        System.out.println("\n*** find(and(gt('i', 50), lte('i', 100))) using PrintDocumentSubscriber<>  ***");
         documentSubscriber = new PrintDocumentSubscriber();
         collection.find(and(gt("i", 50), lte("i", 100))).subscribe(documentSubscriber);
-        successSubscriber.await();
+        documentSubscriber.await();
 
         // Sorting
+        System.out.println("\n*** find(exists('i')).sort(descending('i')).first() using PrintDocumentSubscriber<>  ***");
         documentSubscriber = new PrintDocumentSubscriber();
         collection.find(exists("i")).sort(descending("i")).first().subscribe(documentSubscriber);
         documentSubscriber.await();
 
         // Projection
+        System.out.println("\n*** find().projection(excludeId()).first() using PrintDocumentSubscriber<>  ***");
         documentSubscriber = new PrintDocumentSubscriber();
         collection.find().projection(excludeId()).first().subscribe(documentSubscriber);
         documentSubscriber.await();
 
         // Aggregation
+        System.out.println("\n*** aggregate(asList( match(gt('i', 0)), project(Document.parse(\"{ITimes10: {$multiply: ['$i', 10]}}\"))) using PrintDocumentSubscriber<>  ***");
         documentSubscriber = new PrintDocumentSubscriber();
         collection.aggregate(asList(
                 match(gt("i", 0)),
@@ -152,37 +164,44 @@ public class QuickTour {
         ).subscribe(documentSubscriber);
         documentSubscriber.await();
 
+        System.out.println("\n*** aggregate(singletonList(group(null, sum('total', '$i')))) using PrintDocumentSubscriber<>  ***");
         documentSubscriber = new PrintDocumentSubscriber();
         collection.aggregate(singletonList(group(null, sum("total", "$i"))))
                 .first().subscribe(documentSubscriber);
         documentSubscriber.await();
 
         // Update One
+        System.out.println("\n*** updateOne(eq('i', 10), set('i', 110)) using OperationSubscriber<>  ***");
         ObservableSubscriber<UpdateResult> updateSubscriber = new OperationSubscriber<>();
         collection.updateOne(eq("i", 10), set("i", 110)).subscribe(updateSubscriber);
         updateSubscriber.await();
 
         // Update Many
+        System.out.println("\n*** updateMany(lt('i', 100), inc('i', 100)) using OperationSubscriber<>  ***");
         updateSubscriber = new OperationSubscriber<>();
         collection.updateMany(lt("i", 100), inc("i", 100)).subscribe(updateSubscriber);
         updateSubscriber.await();
 
         // Delete One
+        System.out.println("\n*** deleteOne(eq('i', 110)) using OperationSubscriber<>  ***");
         ObservableSubscriber<DeleteResult> deleteSubscriber = new OperationSubscriber<>();
         collection.deleteOne(eq("i", 110)).subscribe(deleteSubscriber);
         deleteSubscriber.await();
 
         // Delete Many
+        System.out.println("\n*** deleteMany(gte('i', 100)) using OperationSubscriber<>  ***");
         deleteSubscriber = new OperationSubscriber<>();
         collection.deleteMany(gte("i", 100)).subscribe(deleteSubscriber);
         deleteSubscriber.await();
 
         // Create Index
+        System.out.println("\n*** createIndex(new Document('i', 1)) using PrintSubscriber<>  ***");
         OperationSubscriber<String> createIndexSubscriber = new PrintSubscriber<>("Create Index Result: %s");
         collection.createIndex(new Document("i", 1)).subscribe(createIndexSubscriber);
         createIndexSubscriber.await();
 
         // Clean up
+        System.out.println("\n*** drop() using OperationSubscriber<>  ***");
         successSubscriber = new OperationSubscriber<>();
         collection.drop().subscribe(successSubscriber);
         successSubscriber.await();
